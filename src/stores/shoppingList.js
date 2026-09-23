@@ -76,12 +76,16 @@ export const useShoppingListStore = defineStore('shoppingList', {
       const inventory = useInventoryStore()
       const targets = this.items.filter((i) => ids.includes(i.id) && !i.purchased)
 
+      const purchaseId = uid('purchase')
+      const dateKey = new Date().toISOString().slice(0, 10)
       targets.forEach((i) => {
         inventory.restock({
           name: i.name,
           unit: i.unit,
           quantity: i.gap,
           category: i.category || '其他',
+          date: dateKey,
+          batchId: purchaseId,
         })
         i.purchased = true
       })
@@ -89,7 +93,7 @@ export const useShoppingListStore = defineStore('shoppingList', {
       const total = targets.reduce((s, i) => s + Number(i.price || 0), 0)
       if (targets.length) {
         this.history.unshift({
-          id: uid('purchase'),
+          id: purchaseId,
           date: new Date().toISOString(),
           items: targets.map((t) => ({ name: t.name, unit: t.unit, quantity: t.gap, price: t.price })),
           total,
