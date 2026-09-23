@@ -5,6 +5,7 @@ import { remainingDays } from '@/utils/date'
 import { EXPIRY_WARN_DAYS } from '@/constants'
 
 const STORAGE_KEY = 'inventory'
+const CONSUMPTION_KEY = 'consumption-log'
 
 function createItem(data) {
   return {
@@ -25,6 +26,8 @@ function createItem(data) {
 export const useInventoryStore = defineStore('inventory', {
   state: () => ({
     items: read(STORAGE_KEY, []),
+    // 消耗流水 [{ id, date, ingredientId, name, unit, category, amount }]
+    consumptionLog: read(CONSUMPTION_KEY, []),
   }),
 
   getters: {
@@ -66,6 +69,10 @@ export const useInventoryStore = defineStore('inventory', {
       write(STORAGE_KEY, this.items)
     },
 
+    persistConsumption() {
+      write(CONSUMPTION_KEY, this.consumptionLog)
+    },
+
     addItem(data) {
       const item = createItem(data)
       this.items.unshift(item)
@@ -85,11 +92,25 @@ export const useInventoryStore = defineStore('inventory', {
       this.persist()
     },
 
-    // 消耗食材（减少数量，归零则删除）
+    // 消耗食材（减少数量，归零则删除），并记录消耗流水用于分析
     consume(id, amount = 1) {
       const item = this.items.find((i) => i.id === id)
       if (!item) return
-      const next = Number(item.quantity) - Number(amount)
+      const used = Math.min(Number(amount), Number(item.quantity))
+      if (used <= 0) return
+
+      this.consumptionLog.unshift({
+        id: uid('use'),
+        date: new Date().toISOString(),
+        ingredientId: item.id,
+        name: item.name,
+        unit: item.unit,
+        category: item.category,
+        amount: used,
+      })
+      this.persistConsumption()
+
+      const next = Number(item.quantity) - used
       if (next <= 0) this.removeItem(id)
       else this.updateItem(id, { quantity: next })
     },

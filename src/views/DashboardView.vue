@@ -43,7 +43,10 @@ const catData = computed(() => Object.values(categoryStats.value))
         <SimpleChart type="line" :labels="trendLabels" :data="trendData" color="#2196f3" :height="200" />
       </div>
       <div class="card">
-        <div class="section-title">库存类别分布</div>
+        <div class="section-title">
+          <span>库存类别分布</span>
+          <router-link to="/consumption" class="link">消耗分析 →</router-link>
+        </div>
         <SimpleChart type="bar" :labels="catLabels" :data="catData" color="#4caf50" :height="200" />
       </div>
     </div>
@@ -79,6 +82,9 @@ const catData = computed(() => Object.values(categoryStats.value))
 <style scoped>
 h2 {
   margin-bottom: 16px;
+}
+.link {
+  font-size: 13px;
 }
 .grid {
   margin-bottom: 16px;
